@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: salaryscope_db
+    environment:
+      POSTGRES_USER: salaryscope
+      POSTGRES_PASSWORD: salaryscope
+      POSTGRES_DB: salaryscope
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: salaryscope_api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    env_file:
+      - .env
+    command: >
+      sh -c "
+        npx prisma migrate deploy &&
+        npx ts-node prisma/seed.ts &&
+        node dist/server.js
+      "
+
+volumes:
+  db_data:
